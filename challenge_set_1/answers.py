@@ -42,18 +42,24 @@ def character_frequency(input_str):
         'w': 2.360,
         'x': 0.150,
         'y': 1.974,
-        'z': 0.074
+        'z': 0.074,
+        # FIXME for challenge 4 I've had to fudge this list by including the below
+        # space character in order to ensure the score alg chose the correct
+        # sentance. The current value (5.00) is probably a tad high.
+        ' ': 5.00
     }
-    occurance_count = {char: 0 for char in string.ascii_lowercase}
+    occurance_count = {char: 0 for char in string.ascii_lowercase+' '}
     ignored = 0
     for character in input_str:
-        if character in string.ascii_letters:
+        if character in string.ascii_letters + ' ':
             occurance_count[character.lower()] += 1
         else:
             ignored += 1
 
     chi_squared = 0
     length_of_input = len(input_str)
+    if ignored == length_of_input:
+        return 0
     for char, occurance in occurance_count.items():
         expected = (
             float(length_of_input - ignored)
@@ -61,6 +67,11 @@ def character_frequency(input_str):
         )
         if not expected:
             # Sometimes the expected value is zero.
+            print((
+                length_of_input,
+                ignored,
+                expected_character_frequency[char]
+            ))
             continue
         difference = occurance - expected
         chi_squared += difference * difference / expected
@@ -124,7 +135,35 @@ def challenge_3():
     print('OUTPUT: {}'.format(results[0][1]))
 
 
+def challenge_4():
+    print('\nChallenge 4')
+
+    def xor(a_byte, b_list):
+        obuf = b''
+        for b_byte in b_list:
+            obuf += struct.pack('B', (ord(a_byte) ^ ord(b_byte)))
+        return obuf
+
+    scored_output = []
+    raw_ = ''
+    with open('4.txt', 'r') as f:
+        raw_ = f.read()
+    for line in raw_.split():
+        buf = line.decode('hex')
+        start_byte = b'\x00'
+        count = (16 * 16) - 1
+        while count:
+            output = xor(start_byte, buf)
+            score = character_frequency(output)
+            scored_output.append((score, output))
+            start_byte = struct.pack('B', ord(start_byte) + 1)
+            count -= 1
+    scored_output.sort(key=lambda x: x[0], reverse=True)
+    print(scored_output[0][1])
+
+
 if __name__ == '__main__':
     challenge_1()
     challenge_2()
     challenge_3()
+    challenge_4()
