@@ -9,6 +9,10 @@ def find_ngrams(input_list, n):
     return zip(*[input_list[i:] for i in range(n)])
 
 
+def xor(a_byte, b_byte):
+    return struct.pack('B', (ord(a_byte) ^ ord(b_byte)))
+
+
 def character_frequency(input_str):
     """
         Takes an input string and determines the chi^2 value for it's contents.
@@ -43,9 +47,9 @@ def character_frequency(input_str):
         'x': 0.150,
         'y': 1.974,
         'z': 0.074,
-        # FIXME for challenge 4 I've had to fudge this list by including the below
-        # space character in order to ensure the score alg chose the correct
-        # sentance. The current value (5.00) is probably a tad high.
+        # FIXME for challenge 4 I've had to fudge this list by including the
+        # below space character in order to ensure the score alg chose the
+        # correct sentance. The current value (5.00) is probably a tad high.
         ' ': 5.00
     }
     occurance_count = {char: 0 for char in string.ascii_lowercase+' '}
@@ -162,8 +166,25 @@ def challenge_4():
     print(scored_output[0][1])
 
 
+def challenge_5():
+    print('\nChallenge 5')
+    expected_output = '0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343\
+c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b202831652\
+86326302e27282f'
+    input_str = """Burning 'em, if you ain't quick and nimble
+I go crazy when I hear a cymbal"""
+    KEY = 'ICE'
+    pointer = 0
+    obuf = b''
+    for char in input_str:
+        obuf += xor(KEY[pointer % 3], char)
+        pointer += 1
+    print('PASS [{}]'.format(obuf.encode('hex') == expected_output))
+
+
 if __name__ == '__main__':
     challenge_1()
     challenge_2()
     challenge_3()
     challenge_4()
+    challenge_5()
