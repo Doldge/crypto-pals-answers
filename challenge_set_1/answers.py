@@ -104,9 +104,9 @@ def challenge_2():
     hex_input1 = '1c0111001f010100061a024b53535009181c'
     hex_input2 = '686974207468652062756c6c277320657965'
 
-    def xor(a, b):
+    def xor(a_list, b_list):
         obuf = b''
-        for a_byte, b_byte in zip(a, b):
+        for a_byte, b_byte in zip(a_list, b_list):
             obuf += struct.pack('B', (ord(a_byte) ^ ord(b_byte)))
         return obuf.encode('hex')
 
@@ -182,9 +182,67 @@ I go crazy when I hear a cymbal"""
     print('PASS [{}]'.format(obuf.encode('hex') == expected_output))
 
 
+def str2bits(s=''):
+    return [bin(ord(x))[2:].zfill(8) for x in s]
+
+
+def hamming_distance(a_bits, b_bits):
+    count = 0
+    _a = ''.join(a_bits)
+    _b = ''.join(b_bits)
+    for i, j in zip(_a, _b):
+        if i != j:
+            count += 1
+    return count
+
+
+def challenge_6():
+    print('\nChallenge 6')
+    # Test our hamming code works
+    test_str1 = 'this is a test'
+    test_str2 = 'wokka wokka!!!'
+    test_res = hamming_distance(str2bits(test_str1), str2bits(test_str2))
+    print('HAMMING TEST PASS [{}]'.format(test_res == 37))
+    # read the input file
+    input_data = ''
+    with open('6.txt', 'r') as f:
+        input_data = f.read()
+    input_data = input_data.decode('base64')
+    input_data_bin = str2bits(input_data)
+    # find a key_size
+    key_list = []
+    for key_size in range(2, 40):
+        block_1 = input_data_bin[:key_size]
+        block_2 = input_data_bin[key_size:key_size*2]
+        distance = float(hamming_distance(block_1, block_2))
+        normalized = distance / key_size
+        key_list.append((normalized, key_size))
+    key_list.sort(key=lambda x: x[0])
+    print(key_list)
+    key_size = key_list[1]
+    # break the input into blocks of key_size
+    blocks = []
+    last_i = 0
+    for i, byte in enumerate(input_data_bin):
+        if i != 0 and i % key_size == 0:
+            blocks.append(input_data_bin[last_i:i])
+            last_i = i
+    # transpose the blocks
+    transposed_blocks = []
+    i = 0
+    while i <= key_size:
+        t_block = []
+        for block in blocks:
+            t_block.append(block[i])
+        transposed_blocks.append(t_block)
+        i += 1
+    # solve each block as if it were an xor.
+
+
 if __name__ == '__main__':
     challenge_1()
     challenge_2()
     challenge_3()
     challenge_4()
     challenge_5()
+    challenge_6()
